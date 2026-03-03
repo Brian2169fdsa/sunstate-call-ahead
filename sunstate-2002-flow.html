@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SunState 2002 — Scenario Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f0f2f5;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  .canvas {
+    width: 900px;
+    position: relative;
+  }
+
+  /* ── BRAND LABEL ── */
+  .brand {
+    text-align: right;
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a9bb5;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  /* ── LAYER WRAPPER ── */
+  .layer {
+    background: #2c3e5a;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 0;
+    position: relative;
+  }
+  .layer.light {
+    background: #3d5475;
+  }
+  .layer.mid {
+    background: #4a6180;
+  }
+  .layer.accent {
+    background: #1a2a42;
+  }
+
+  .layer-label {
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    white-space: nowrap;
+  }
+
+  .layer-title {
+    text-align: center;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.2px;
+  }
+
+  /* ── BOXES ── */
+  .box-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .box-row:last-child { margin-bottom: 0; }
+
+  .box {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    color: #ffffff;
+    flex: 1;
+    max-width: 280px;
+    transition: all 0.2s;
+  }
+  .box:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateY(-1px);
+  }
+
+  .box-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .box-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+
+  .box.highlight {
+    background: rgba(255,255,255,0.22);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  .box.wide {
+    max-width: 420px;
+  }
+
+  .box.full {
+    max-width: 100%;
+    flex: unset;
+    width: 100%;
+  }
+
+  /* ── CONNECTORS ── */
+  .connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 44px;
+    position: relative;
+  }
+
+  .arrow-down {
+    width: 2px;
+    height: 100%;
+    background: #8a9bb5;
+    position: relative;
+  }
+  .arrow-down::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #8a9bb5;
+  }
+
+  .connector-label {
+    position: absolute;
+    font-size: 9px;
+    font-weight: 600;
+    color: #6b7fa0;
+    letter-spacing: 0.5px;
+    background: #f0f2f5;
+    padding: 2px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .connector-label.left { right: calc(50% + 16px); }
+  .connector-label.right { left: calc(50% + 16px); }
+
+  /* ── SPLIT CONNECTORS ── */
+  .split-connector {
+    position: relative;
+    height: 60px;
+    margin: 0;
+  }
+  .split-connector svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ── RETURN ARROW ── */
+  .return-connector {
+    position: relative;
+    height: 50px;
+  }
+  .return-connector svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ── SIDE LABEL ── */
+  .flow-note {
+    font-size: 10px;
+    color: #6b7fa0;
+    text-align: center;
+    margin: -4px 0 4px;
+    font-weight: 500;
+  }
+
+  /* ── 3-BOX MID-CALL ROW ── */
+  .midcall-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .midcall-box {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-align: center;
+    color: #ffffff;
+    flex: 1;
+    max-width: 180px;
+  }
+  .midcall-box .box-name { font-size: 12px; }
+  .midcall-box .box-sub { font-size: 9px; }
+
+  .midcall-box.cancel { border-left: 3px solid #ff6b6b; }
+  .midcall-box.resched { border-left: 3px solid #ffc145; }
+  .midcall-box.notes { border-left: 3px solid #69db7c; }
+
+  /* ── ROUTER BRANCHES ── */
+  .branch-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .branch-box {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-align: center;
+    color: #ffffff;
+    flex: 1;
+    max-width: 220px;
+  }
+  .branch-box .box-name { font-size: 11px; }
+  .branch-box .box-sub { font-size: 9px; }
+
+  .branch-box.facility { border-top: 3px solid #69db7c; }
+  .branch-box.patient { border-top: 3px solid #b197fc; }
+  .branch-box.voicemail { border-top: 3px solid #ffc145; }
+
+  /* ── SVG STYLES ── */
+  .flow-line { stroke: #8a9bb5; stroke-width: 2; fill: none; }
+  .flow-arrow { fill: #8a9bb5; }
+  .flow-line-dash { stroke: #8a9bb5; stroke-width: 1.5; fill: none; stroke-dasharray: 5,4; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <div class="brand">MANAGE AI</div>
+
+  <!-- ═══ TRIGGER LAYER ═══ -->
+  <div class="layer">
+    <div class="layer-title">Call Initiation</div>
+    <div class="box-row">
+      <div class="box">
+        <div class="box-name">Batch Outbound Dialer</div>
+        <div class="box-sub">On-Demand · Reads Sheet A2:S100<br>Filters blank Call Status · Loops rows</div>
+      </div>
+      <div class="box">
+        <div class="box-name">Direct Call Trigger</div>
+        <div class="box-sub">Webhook · GPT / Manual<br>Appends new row · Single call</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTOR -->
+  <div class="connector">
+    <div class="arrow-down"></div>
+    <span class="connector-label right">POST /v2/create-phone-call</span>
+  </div>
+
+  <!-- ═══ GOOGLE SHEET ═══ -->
+  <div class="layer light" style="padding:16px 24px;">
+    <div class="box-row" style="margin:0;">
+      <div class="box highlight full" style="max-width:100%;">
+        <div class="box-name">📊 Google Sheet — Master Trip Data</div>
+        <div class="box-sub">Cols A–N: Trip Data &nbsp;·&nbsp; Col O: Call Status &nbsp;·&nbsp; Col P: Agent Notes &nbsp;·&nbsp; Cols Q–U: Results</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTOR -->
+  <div class="connector">
+    <div class="arrow-down"></div>
+    <span class="connector-label right">Writes "Call Initiated" → Col O</span>
+  </div>
+
+  <!-- ═══ RETELL AI CALL ═══ -->
+  <div class="layer accent">
+    <div class="layer-title">Retell AI Voice Call</div>
+    <div class="box-row">
+      <div class="box wide highlight">
+        <div class="box-name">🤖 AI Agent Calls Facility</div>
+        <div class="box-sub">From +1 (866) 846-9080 · Agent has full trip context via dynamic variables</div>
+      </div>
+    </div>
+
+    <!-- MID-CALL TOOLS inside the call -->
+    <div style="margin-top:16px;">
+      <div class="flow-note" style="color:rgba(255,255,255,0.4);margin-bottom:10px;font-size:9px;letter-spacing:1px;">MID-CALL WEBHOOK TOOLS ↓</div>
+      <div class="midcall-row">
+        <div class="midcall-box cancel">
+          <div class="box-name">🚫 Cancel Trip</div>
+          <div class="box-sub">Writes Q–U · Emails dispatch</div>
+        </div>
+        <div class="midcall-box resched">
+          <div class="box-name">📅 Reschedule</div>
+          <div class="box-sub">Updates B–C · Writes Q–U · Emails</div>
+        </div>
+        <div class="midcall-box notes">
+          <div class="box-name">📝 Update Notes</div>
+          <div class="box-sub">Writes to Col P</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTOR -->
+  <div class="connector">
+    <div class="arrow-down"></div>
+    <span class="connector-label right">Call ends → POST transcript + metadata</span>
+  </div>
+
+  <!-- ═══ CALL RESULT ROUTER ═══ -->
+  <div class="layer">
+    <div class="layer-title">Call Result Router</div>
+    <div class="box-row">
+      <div class="box wide highlight">
+        <div class="box-name">🧠 GPT-4.1 Classification</div>
+        <div class="box-sub">Analyzes transcript → FACILITY_REACHED · PATIENT_REACHED · VOICEMAIL · NO_ANSWER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPLIT INTO 3 BRANCHES -->
+  <svg width="900" height="60" style="display:block;">
+    <!-- center line down -->
+    <line x1="450" y1="0" x2="450" y2="15" class="flow-line"/>
+    <!-- horizontal bar -->
+    <line x1="145" y1="15" x2="755" y2="15" class="flow-line"/>
+    <!-- left drop -->
+    <line x1="145" y1="15" x2="145" y2="52" class="flow-line"/>
+    <polygon points="139,50 151,50 145,60" class="flow-arrow"/>
+    <!-- center drop -->
+    <line x1="450" y1="15" x2="450" y2="52" class="flow-line"/>
+    <polygon points="444,50 456,50 450,60" class="flow-arrow"/>
+    <!-- right drop -->
+    <line x1="755" y1="15" x2="755" y2="52" class="flow-line"/>
+    <polygon points="749,50 761,50 755,60" class="flow-arrow"/>
+  </svg>
+
+  <!-- ═══ THREE BRANCHES ═══ -->
+  <div class="layer mid">
+    <div class="branch-row">
+      <div class="branch-box facility">
+        <div class="box-name">✅ Facility Reached</div>
+        <div class="box-sub">GPT extracts structured data<br>Writes Q–U · Emails dispatch</div>
+      </div>
+      <div class="branch-box patient">
+        <div class="box-name">⟳ Patient Reached</div>
+        <div class="box-sub">Wrong party answered<br>Marks sheet · Auto-retries call</div>
+      </div>
+      <div class="branch-box voicemail">
+        <div class="box-name">⊘ VM / No Answer</div>
+        <div class="box-sub">Logs status to sheet<br>Marks "Auto-retry needed"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETURN ARROW for Patient Reached retry -->
+  <svg width="900" height="80" style="display:block;">
+    <!-- Patient branch (center at ~450) goes right and curves back up -->
+    <path d="M 450,10 L 450,25 L 840,25 L 840,-340" class="flow-line-dash" style="stroke:#b197fc;"/>
+    <!-- Arrow pointing up at top -->
+    <polygon points="834,-335 846,-335 840,-345" style="fill:#b197fc;"/>
+    <!-- Label -->
+    <text x="700" y="45" font-family="Inter" font-size="9" font-weight="600" fill="#b197fc">RETRY → Back to Retell AI</text>
+  </svg>
+
+  <!-- ═══ FINAL: ALL WRITE TO SHEET ═══ -->
+  <div style="margin-top:-40px;">
+    <div class="connector" style="height:30px;">
+      <div class="arrow-down" style="height:100%;"></div>
+    </div>
+
+    <div class="layer light" style="padding:16px 24px;">
+      <div class="box-row" style="margin:0;">
+        <div class="box highlight full">
+          <div class="box-name">📊 Google Sheet — Results Written</div>
+          <div class="box-sub">Col Q: Status &nbsp;·&nbsp; Col R: Transport Confirmed &nbsp;·&nbsp; Col S: Clinical Notes &nbsp;·&nbsp; Col T: Summary &nbsp;·&nbsp; Col U: Timestamp</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector" style="height:30px;">
+      <div class="arrow-down" style="height:100%;"></div>
+    </div>
+
+    <div class="layer accent" style="padding:16px 24px;">
+      <div class="box-row" style="margin:0;">
+        <div class="box highlight full" style="max-width:100%;">
+          <div class="box-name">📧 Dispatch Email Notification</div>
+          <div class="box-sub">Outlook · HTML alerts to brian@manageai.io &nbsp;·&nbsp; Cancel (red) · Reschedule (yellow) · Complete (green)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
